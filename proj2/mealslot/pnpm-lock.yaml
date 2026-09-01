@@ -25,7 +25,7 @@ importers:
         version: 2.8.54(@aws-sdk/credential-provider-web-identity@3.940.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@3.4.14(ts-node@10.9.2(@types/node@20.11.30)(typescript@5.6.3)))
       '@stackframe/stack':
         specifier: ^2.8.54
-        version: 2.8.54(@aws-sdk/credential-provider-web-identity@3.940.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@3.4.14(ts-node@10.9.2(@types/node@20.11.30)(typescript@5.6.3)))
+        version: 2.8.54(@aws-sdk/credential-provider-web-identity@3.940.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@3.4.14(ts-node@10.9.2(@types/node@20.11.30)(typescript@5.6.3)))
       auth:
         specifier: ^1.2.3
         version: 1.2.3
@@ -49,10 +49,10 @@ importers:
         version: 1.1.2
       next:
         specifier: 16.0.7
-        version: 16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        version: 16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next-auth:
         specifier: ^4.24.13
-        version: 4.24.13(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        version: 4.24.13(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -87,6 +87,9 @@ importers:
       '@next/eslint-plugin-next':
         specifier: ^16.0.3
         version: 16.0.3
+      '@playwright/test':
+        specifier: 1.48.2
+        version: 1.48.2
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -1219,6 +1222,11 @@ packages:
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
+
+  '@playwright/test@1.48.2':
+    resolution: {integrity: sha512-54w1xCWfXuax7dz4W2M9uw0gDyh+ti/0K/MxcCUxChFh37kkdxPdfZDw5QBbuPUJHr1CiHJ1hXgSs+GgeQc5Zw==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   '@prisma/client@5.20.0':
     resolution: {integrity: sha512-CLv55ZuMuUawMsxoqxGtLT3bEZoa2W8L3Qnp6rDIFWy+ZBrUcOFKdoeGPSnbBqxc3SkdxJrF+D1veN/WNynZYA==}
@@ -6556,6 +6564,10 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
+  '@playwright/test@1.48.2':
+    dependencies:
+      playwright: 1.48.2
+
   '@prisma/client@5.20.0(prisma@5.20.0)':
     optionalDependencies:
       prisma: 5.20.0
@@ -7714,9 +7726,9 @@ snapshots:
       - react-dom
       - tailwindcss
 
-  '@stackframe/stack-sc@2.8.54(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
+  '@stackframe/stack-sc@2.8.54(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      next: 16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      next: 16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       react: 19.2.1
       react-dom: 19.2.1(react@19.2.1)
     optionalDependencies:
@@ -7805,12 +7817,12 @@ snapshots:
       - aws-crt
       - buffer
 
-  '@stackframe/stack@2.8.54(@aws-sdk/credential-provider-web-identity@3.940.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@3.4.14(ts-node@10.9.2(@types/node@20.11.30)(typescript@5.6.3)))':
+  '@stackframe/stack@2.8.54(@aws-sdk/credential-provider-web-identity@3.940.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@3.4.14(ts-node@10.9.2(@types/node@20.11.30)(typescript@5.6.3)))':
     dependencies:
       '@hookform/resolvers': 3.10.0(react-hook-form@7.66.1(react@19.2.1))
       '@oslojs/otp': 1.1.0
       '@simplewebauthn/browser': 11.0.0
-      '@stackframe/stack-sc': 2.8.54(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@stackframe/stack-sc': 2.8.54(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@stackframe/stack-shared': 2.8.54(@aws-sdk/credential-provider-web-identity@3.940.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(yup@1.7.1)
       '@stackframe/stack-ui': 2.8.54(@aws-sdk/credential-provider-web-identity@3.940.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(yup@1.7.1)
       '@tanstack/react-table': 8.21.3(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -7820,7 +7832,7 @@ snapshots:
       jose: 5.10.0
       js-cookie: 3.0.5
       lucide-react: 0.378.0(react@19.2.1)
-      next: 16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      next: 16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       oauth4webapi: 2.17.0
       qrcode: 1.5.4
       react: 19.2.1
@@ -10020,13 +10032,13 @@ snapshots:
 
   neon-js@1.1.2: {}
 
-  next-auth@4.24.13(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
+  next-auth@4.24.13(next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
       '@babel/runtime': 7.28.4
       '@panva/hkdf': 1.2.1
       cookie: 0.7.2
       jose: 4.15.9
-      next: 16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      next: 16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       oauth: 0.9.15
       openid-client: 5.7.1
       preact: 10.27.2
@@ -10040,7 +10052,7 @@ snapshots:
       react: 19.2.1
       react-dom: 19.2.1(react@19.2.1)
 
-  next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
+  next@16.0.7(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
       '@next/env': 16.0.7
       '@swc/helpers': 0.5.15
@@ -10059,6 +10071,7 @@ snapshots:
       '@next/swc-win32-arm64-msvc': 16.0.7
       '@next/swc-win32-x64-msvc': 16.0.7
       '@opentelemetry/api': 1.9.0
+      '@playwright/test': 1.48.2
       sharp: 0.34.5
     transitivePeerDependencies:
       - '@babel/core'

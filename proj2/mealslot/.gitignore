@@ -8,3 +8,6 @@ coverage
 !/.*.example
 playwright-report
 test-results
+.cache/
+.local/
+/playwright/.auth/
