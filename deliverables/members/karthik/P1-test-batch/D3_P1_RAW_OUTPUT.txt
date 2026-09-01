@@ -1,0 +1,42 @@
+Command: node scripts\run-playwright.cjs --grep '@p1'
+Environment: Chromium; Next.js test server http://127.0.0.1:3100; WebSocket service http://127.0.0.1:4101; PostgreSQL mealslot_test at localhost:5432; seeded dishes=59
+Date: 2026-09-01
+
+Running 11 tests using 1 worker
+
+  x  1 [chromium] › p1-api.spec.ts › TC-UC16-02 @p1 rejects empty, whitespace-only, and 25-character party nicknames
+  ok 2 [chromium] › p1-api.spec.ts › TC-UC17-02 @p1 rejects malformed and nonexistent party codes without creating memberships
+  ok 3 [chromium] › p1-api.spec.ts › TC-UC14-03 @p1 preserves authoritative membership when the leave operation fails
+  ok 4 [chromium] › p1-api.spec.ts › TC-UC08-01 @p1 persists one authenticated favorite exactly once
+  ok 5 [chromium] › p1-api.spec.ts › TC-UC12-01 @p1 resolves authenticated favorites from multiple catalog categories
+  ok 6 [chromium] › p1-api.spec.ts › TC-UC13-01 @p1 removes one authenticated favorite durably without affecting another
+  -  7 [chromium] › p1-api.spec.ts › TC-UC04-03 @p1 verifies party fallback allergen safety when internal spin fails
+  x  8 [chromium] › p1-realtime.spec.ts › TC-UC03-01 @p1 reaches keep-vote quorum across three party members
+  ok 9 [chromium] › p1-realtime.spec.ts › TC-UC03-03 @p1 switches a member vote from keep to reroll on one slot
+  x 10 [chromium] › p1-realtime.spec.ts › TC-UC20-01 @p1 exchanges chat messages between two browser sessions
+  - 11 [chromium] › p1-realtime.spec.ts › TC-UC20-03 @p1 continues chat over the same-origin fallback when the socket is unavailable
+
+1) TC-UC16-02
+   Expected statuses: empty=400, whitespace=400, 25 characters=400
+   Observed statuses: empty=400, whitespace=200, 25 characters=400
+   Failure: whitespace-only nickname was accepted.
+   Artifact: failure-artifacts/TC-UC16-02/trace.zip
+
+2) TC-UC03-01
+   Expected: after the host spin, both joined clients display three dishes; two keep votes lock slot 0 for all clients.
+   Observed: each joined client had 0 YouTube dish links instead of 3, and the host never displayed an Unlock control for slot 0.
+   Artifacts: failure-artifacts/TC-UC03-01/host.png, member-one.png, member-two.png, trace.zip
+
+3) TC-UC20-01
+   Expected: host and joined member each see both messages once.
+   Observed: each sender saw its own local echo, but the other browser never received the message within 3000 ms.
+   Artifacts: failure-artifacts/TC-UC20-01/host.png, member.png, trace.zip
+
+Blocked/skipped:
+- TC-UC04-03: unchanged party-spin route has no controllable seam to force failure of its internal /api/spin call.
+- TC-UC20-03: current E2E build hardcodes NEXT_PUBLIC_WS_URL and the unchanged client has no runtime switch to force BroadcastChannel.
+
+Final summary:
+  3 failed
+  2 skipped
+  6 passed (34.0s)

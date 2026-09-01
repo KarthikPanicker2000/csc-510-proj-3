@@ -57,6 +57,7 @@ Useful filtered commands:
 ```powershell
 pnpm test:e2e -- --list
 pnpm test:e2e -- --grep "@p0"
+pnpm test:e2e -- --grep "@p1"
 pnpm test:e2e -- tests/e2e/p0-api.spec.ts
 ```
 
@@ -71,7 +72,7 @@ The runner starts Next.js at `http://127.0.0.1:3100` and the WebSocket service a
 5. Test current behavior; do not change application logic merely to make a test pass.
 6. Record the expected result and exact observed result in the team's D3 table.
 
-`p0-api.spec.ts` demonstrates API-level workflows. `smoke.spec.ts` demonstrates a real browser journey.
+`p0-api.spec.ts` and `p1-api.spec.ts` demonstrate API/database workflows. `smoke.spec.ts` demonstrates a real browser journey, and `p1-realtime.spec.ts` demonstrates isolated multi-browser party workflows.
 
 ## Preserving evidence
 
