@@ -1,0 +1,34 @@
+Command: node scripts\run-playwright.cjs
+Environment: Chromium; Next.js test server http://127.0.0.1:3100; PostgreSQL mealslot_test at localhost:5432; seeded dishes=59
+Date: 2026-09-01
+
+Running 7 tests using 1 worker
+
+  ok 1 [chromium] › p0-api.spec.ts › TC-UC04-02 @p0 rejects missing categories and returns a placeholder for an empty category (190ms)
+  ok 2 [chromium] › p0-api.spec.ts › TC-UC09-01 @p0 excludes selected allergens from spin candidates and results (286ms)
+  ok 3 [chromium] › p0-api.spec.ts › TC-UC16-01 @p0 creates an active party with the creator as its first member (103ms)
+  ok 4 [chromium] › p0-api.spec.ts › TC-UC17-01 @p0 joins an active party and exposes both members in party state (97ms)
+  ok 5 [chromium] › p0-api.spec.ts › TC-UC02-01 @p0 merges party diets, allergens, budget, and time preferences (110ms)
+  ok 6 [chromium] › p0-api.spec.ts › TC-UC14-01 @p0 removes the intended member while the party remains active (92ms)
+  x  7 [chromium] › smoke.spec.ts › TC-UC04-01 @p0 completes the default solo spin (13.3s)
+
+1) [chromium] › smoke.spec.ts › TC-UC04-01 @p0 completes the default solo spin
+
+   Error: Timed out 7000ms waiting for expect(locator).toHaveCount(expected)
+
+   Locator: getByText('No options')
+   Expected: 0
+   Received: 6
+
+   at tests\e2e\smoke.spec.ts:16:46
+
+1 failed
+  [chromium] › smoke.spec.ts › TC-UC04-01 @p0 completes the default solo spin
+6 passed (20.3s)
+
+Failure artifacts:
+- test-results\smoke-TC-UC04-01-p0-completes-the-default-solo-spin-chromium\test-failed-1.png
+- test-results\smoke-TC-UC04-01-p0-completes-the-default-solo-spin-chromium\video.webm
+- test-results\smoke-TC-UC04-01-p0-completes-the-default-solo-spin-chromium\trace.zip
+
+
