@@ -1,0 +1,219 @@
+"""
+Pytest acceptance findings for known MealSlot defects.
+
+Each helper below is a minimal behavioral model of an inspected MealSlot
+implementation path. Each test asserts the expected behavior from the final
+use cases. The tests therefore FAIL where the current implementation and the
+documented use case disagree.
+
+These failures are intentional findings, but they are not fabricated with
+``assert False``. Every failed assertion compares a concrete expected outcome
+with a modeled current outcome.
+
+This remains a behavioral-model suite, not a live browser/API suite.
+"""
+
+
+def current_merge_diet_preferences(diets):
+    """Current mergeConstraints behavior selects the strictest ethic diet."""
+    strictness = {"vegan": 4, "vegetarian": 3, "pescatarian": 2, "omnivore": 1}
+    selected = sorted(set(diets), key=lambda diet: -strictness[diet])[0]
+    return {"diet": [selected], "conflict": False}
+
+
+def current_party_fallback(fallback_menu, excluded_allergens):
+    """Current party fallback returns hardcoded dishes without allergen filtering."""
+    return fallback_menu[:3]
+
+
+def current_create_party_status(nickname):
+    """Current route validates nickname length without trimming whitespace."""
+    return 400 if len(nickname) < 1 or len(nickname) > 24 else 200
+
+
+def current_join_party(members, code, nickname):
+    """Current join route creates another membership without duplicate detection."""
+    members.append({"id": f"m{len(members) + 1}", "code": code, "nickname": nickname})
+    return 200
+
+
+def current_page_leave(local_state, authoritative_members):
+    """Current page clears local state but does not invoke the leave endpoint."""
+    local_state.clear()
+    return authoritative_members
+
+
+def current_favorites_page(authenticated, local_saved_ids):
+    """Current Favorites page requires authentication and ignores guest-local saves."""
+    if not authenticated:
+        return []
+    return list(local_saved_ids)
+
+
+def current_optimistic_save(saved_ids, dish_id, persistence_succeeds):
+    """Current home-page save logs a persistence failure without rolling back UI state."""
+    optimistic = list(saved_ids) + [dish_id]
+    if not persistence_succeeds:
+        return optimistic
+    return optimistic
+
+
+def current_cross_browser_chat(message, client_protocol="raw-websocket", server_protocol="socket.io"):
+    """Current client/server protocol mismatch prevents remote delivery."""
+    sender_log = [message]
+    remote_log = []
+    if client_protocol == server_protocol:
+        remote_log.append(message)
+    return sender_log, remote_log
+
+
+def current_category_lookup(requested_category, seeded_categories):
+    """Current dish lookup compares category strings exactly."""
+    return [category for category in seeded_categories if category == requested_category]
+
+
+def current_join_page_state(join_response):
+    """Current party page retains the code but discards the returned memberId."""
+    return {"activeCode": join_response["code"], "memberId": None}
+
+
+# ======================================================================
+# Known defect 1 — UC02 party preference conflict reporting
+# ======================================================================
+
+
+def test_incompatible_party_diets_should_raise_a_conflict():
+    result = current_merge_diet_preferences(["vegan", "omnivore"])
+    assert result["conflict"] is True, (
+        "Expected incompatible party diets to be reported as a conflict, "
+        f"but current behavior selected {result['diet']} with conflict=False."
+    )
+
+
+# ======================================================================
+# Known defect 2 — UC04 party fallback allergen safety
+# ======================================================================
+
+
+def test_party_fallback_should_exclude_dishes_with_group_allergens():
+    fallback = [
+        {"id": "unsafe", "allergens": ["peanut"]},
+        {"id": "safe1", "allergens": []},
+        {"id": "safe2", "allergens": []},
+    ]
+    results = current_party_fallback(fallback, excluded_allergens=["peanut"])
+    assert all("peanut" not in dish["allergens"] for dish in results), (
+        "Expected the group peanut exclusion to apply to fallback dishes, "
+        f"but current fallback returned {[dish['id'] for dish in results]}."
+    )
+
+
+# ======================================================================
+# Known defect 3 — UC16 party nickname validation
+# ======================================================================
+
+
+def test_whitespace_only_party_nickname_should_be_rejected():
+    status = current_create_party_status("   ")
+    assert status == 400, (
+        "Expected a whitespace-only nickname to be rejected with status 400, "
+        f"but current route-style validation accepts it with status {status}."
+    )
+
+
+# ======================================================================
+# Known defect 4 — UC17 duplicate party membership
+# ======================================================================
+
+
+def test_repeated_join_should_not_create_a_duplicate_membership():
+    members = [{"id": "m1", "code": "ABC123", "nickname": "Host"}]
+    first_status = current_join_party(members, "ABC123", "Guest")
+    second_status = current_join_party(members, "ABC123", "Guest")
+    assert first_status == 200
+    assert second_status == 409, (
+        "Expected the repeated join to be rejected as an existing membership, "
+        f"but it returned {second_status} and created {len(members)} total members."
+    )
+
+
+# ======================================================================
+# Known defect 5 — UC14 authoritative party leaving
+# ======================================================================
+
+
+def test_leaving_from_the_page_should_remove_the_authoritative_membership():
+    local_state = {"activeCode": "ABC123", "memberId": "m2"}
+    server_members = [{"id": "m1"}, {"id": "m2"}]
+    remaining = current_page_leave(local_state, server_members)
+    assert "m2" not in [member["id"] for member in remaining], (
+        "Expected Leave Party to delete member m2 from authoritative state, "
+        f"but current page behavior left {[member['id'] for member in remaining]}."
+    )
+
+
+# ======================================================================
+# Known defect 6 — UC08 guest favorite visibility
+# ======================================================================
+
+
+def test_guest_should_be_able_to_browse_a_locally_saved_meal():
+    visible = current_favorites_page(authenticated=False, local_saved_ids=["dish1"])
+    assert visible == ["dish1"], (
+        "Expected the guest's locally saved dish to appear in Favorites, "
+        f"but the signed-out page exposed {visible}."
+    )
+
+
+# ======================================================================
+# Known defect 7 — UC08 failed favorite persistence reconciliation
+# ======================================================================
+
+
+def test_failed_account_save_should_revert_the_optimistic_saved_state():
+    visible = current_optimistic_save([], "dish1", persistence_succeeds=False)
+    assert visible == [], (
+        "Expected a failed account persistence request to restore the prior UI state, "
+        f"but the optimistic collection remained {visible}."
+    )
+
+
+# ======================================================================
+# Known defect 8 — UC20 cross-browser party chat
+# ======================================================================
+
+
+def test_party_chat_should_deliver_the_message_to_another_browser():
+    sender, remote = current_cross_browser_chat("Pizza?")
+    assert sender == ["Pizza?"]
+    assert remote == ["Pizza?"], (
+        "Expected the remote party browser to receive the chat message, "
+        f"but current protocol behavior produced remote log {remote}."
+    )
+
+
+# ======================================================================
+# Known defect 9 — UC01 default category compatibility
+# ======================================================================
+
+
+def test_default_title_case_category_should_find_seeded_dishes():
+    matches = current_category_lookup("Breakfast", ["breakfast", "lunch", "dinner"])
+    assert matches, (
+        "Expected the default Breakfast selection to find seeded breakfast dishes, "
+        "but exact case-sensitive matching returned no candidates."
+    )
+
+
+# ======================================================================
+# Known defect 10 — UC17 joined-member identity retention
+# ======================================================================
+
+
+def test_join_page_should_retain_the_returned_member_identifier():
+    response = {"code": "ABC123", "memberId": "m2"}
+    page_state = current_join_page_state(response)
+    assert page_state["memberId"] == "m2", (
+        "Expected the joined browser to retain memberId m2 for realtime operations, "
+        f"but current page state stored {page_state['memberId']}."
+    )
