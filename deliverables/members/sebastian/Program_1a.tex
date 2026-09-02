@@ -1,0 +1,611 @@
+\documentclass[sigconf]{acmart}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{supertabular}
+\usepackage{array}
+\usepackage{csquotes}
+
+\MakeOuterQuote{"}
+\setlength{\tabcolsep}{3pt}
+
+\setcopyright{none}
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+
+\title{Program 1a}
+\author{Sebastian Polge}
+\date{September 2026}
+
+\tablefirsthead{\hline \textbf{Part} & \textbf{What it says} \\ \hline}
+\tablehead{\hline \textbf{Part} & \textbf{What it says} \\ \hline}
+\tabletail{\hline}
+\tablelasttail{\hline}
+
+\begin{document}
+
+\maketitle
+
+\section{Product Choice}
+
+\begin{itemize}
+    \item \textbf{Product Name:} Meal Slots
+    \item \textbf{Repo URL:} https://github.com/rithikkulkarni/csc-510-proj-3
+\end{itemize}
+
+We chose this product because it's an inventive idea that feels like a software someone might use and because we saw potential in it to expand and innovate. In addition, Meal Slots uses some powerful infrastructure that felt interesting to learn to access and maintain, and the code was well-maintained and hadn't rotted as much as the other projects we attempted.
+
+Those other projects were Epicourier (Section 1 Group 12, Github Repo here), SafeBites (Section 1 Group 5, Github Repo here), and Route Dash (Section 1 Group 28, Github Repo here), ReqTrace (Section 1 Group 29, Github Repo here), and Taste Buddiez (Section 1 Group 22, Github Repo no longer available). Each of those projects had succumbed to code rot much more than Meal Slots; Taste Buddiez no longer had an accessible repository, Route Dash and ReqTrace had many libraries and APIs that needed to be connected to, and Safe Bites and Epicourier weren't able to be launched. Ultimately, Meal Slots suffered the least code rot and thus was the best software to use.
+
+\section{Use Cases}
+
+\subsection*{Spin for a Meal}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Spin for a meal \\
+\hline
+\textbf{Primary actor} & Player (Guest or Authenticated User) \\
+\hline
+\textbf{Stakeholders \& interests} & Player: wants a fast, low-effort meal decision. \\
+\hline
+\textbf{Preconditions} & App is loaded; dish catalog is populated; spin cooldown has elapsed. \\
+\hline
+\textbf{Trigger} & Player clicks "Spin". \\
+\hline
+\textbf{Main success scenario} & 1. Player selects a category for each of the three slots (or picks a preset).\newline
+2. Player optionally sets allergen filters and Power-Ups.\newline
+3. Player clicks Spin.\newline
+4. System fetches eligible dishes per slot, honoring category, tag, and allergen filters.\newline
+5. System runs a weighted random selection per slot, respecting any locked slots.\newline
+6. System displays the three chosen dishes.\newline
+7. System starts a cooldown before another spin is allowed. \\
+\hline
+\textbf{Extensions} & 4a: No category resolved for a slot $\rightarrow$ system rejects the spin with "category is required"; player picks a category and retries.\newline
+4b: No dishes match the active filters for a slot $\rightarrow$ system fills that slot with a "No options" placeholder dish instead of failing.\newline
+5a: A slot was locked, but the locked dish no longer matches the current filters $\rightarrow$ system silently drops the lock and selects a new dish for that slot.\newline
+5b: Player re-spins with identical filters and reel contents within the same 10-second window as the prior spin $\rightarrow$ the weighted-random seed repeats and the same result is returned.\newline
+6a: The spin request errors on the server $\rightarrow$ system shows placeholder results; player may retry.\newline
+7a: Player clicks Spin again before the cooldown expires $\rightarrow$ the control is disabled and no request is sent. \\
+\hline
+\textbf{Postconditions} & Three dishes are displayed for the round; a spin record is logged best-effort; any still-valid locks are retained for the next spin. \\
+\end{supertabular}
+}
+
+\subsection*{Set Party Dietary Preferences and Resolve Conflicts}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Set dietary preferences for the party \\
+\hline
+\textbf{Primary actor} & Party Member \\
+\hline
+\textbf{Stakeholders \& interests} & All party members --- need a spin result that every member can actually eat. \\
+\hline
+\textbf{Preconditions} & Player is a connected party member. \\
+\hline
+\textbf{Trigger} & Member opens the party sidebar and sets diet type, allergens, or budget/time preference. \\
+\hline
+\textbf{Main success scenario} & 1. Member opens their preference panel in the party sidebar.\newline
+2. Member selects a diet type, allergens to avoid, and a budget/time band.\newline
+3. System sends the updated preferences to the party.\newline
+4. System merges the member's preferences with everyone else's: strictest compatible diet, union of allergens, minimum budget/time band.\newline
+5. System stores the merged party-wide constraints.\newline
+6. Future spins for the party honor the merged constraints. \\
+\hline
+\textbf{Extensions} & 3a: The update request fails on the server $\rightarrow$ system shows an error and the prior merged constraints remain in effect.\newline
+4a: The merged diet restrictions become mutually incompatible (no diet satisfies every member) $\rightarrow$ system flags a conflict and suggests defaulting to vegetarian.\newline
+4b: A merged vegan diet combines with three or more commonly-blocked allergens $\rightarrow$ system flags a conflict and suggests relaxing some restrictions. \\
+\hline
+\textbf{Postconditions} & The party's constraints reflect all members' combined preferences (or a flagged conflict with a suggested resolution) and are applied to subsequent spins. \\
+\end{supertabular}
+}
+
+\subsection*{Vote on a Spin Result}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Vote on a spin result \\
+\hline
+\textbf{Primary actor} & Party Member \\
+\hline
+\textbf{Stakeholders \& interests} & Host --- executes the group's decision. Other members --- want their vote to count toward the outcome. \\
+\hline
+\textbf{Preconditions} & The party has completed a group spin; player is a connected member. \\
+\hline
+\textbf{Trigger} & Member clicks "Keep" or "Reroll" on a slot. \\
+\hline
+\textbf{Main success scenario} & 1. Member views the current dish in a slot.\newline
+2. Member clicks "Keep" or "Reroll".\newline
+3. System records the member's vote for that slot.\newline
+4. System tallies live votes against currently connected members.\newline
+5. When "keep" votes reach a majority of connected members, system locks that slot automatically.\newline
+6. When "reroll" votes instead reach a majority, system triggers the host to re-roll just that slot.\newline
+7. The updated slot state is broadcast to all members. \\
+\hline
+\textbf{Extensions} & 2a: Member changes their vote before quorum is reached $\rightarrow$ the previous vote is replaced by the new one.\newline
+4a: A voting member disconnects $\rightarrow$ once their heartbeat times out, they are dropped from the live count used for quorum, which can shift the threshold needed. \\
+\hline
+\textbf{Postconditions} & The slot's lock/reroll state reflects the group's majority decision without the host needing to act unilaterally. \\
+\end{supertabular}
+}
+
+\subsection*{Spin the Party Slot Machine}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Spin the party slot machine \\
+\hline
+\textbf{Primary actor} & Party host \\
+\hline
+\textbf{Stakeholders \& interests} & All party members --- want a fair, allergen-safe result; System --- must apply merged constraints \\
+\hline
+\textbf{Preconditions} & Party is active; at least one member has submitted preferences; merged constraints are available \\
+\hline
+\textbf{Trigger} & Host clicks Spin in party mode \\
+\hline
+\textbf{Main success scenario} & 1. Host clicks Spin.\newline
+2. Client sends \texttt{\{ code, categories, locked, powerups, constraints \}} to \texttt{/api/party/spin}.\newline
+3. System applies merged party constraints (union of all members' allergens and tags).\newline
+4. System calls the internal \texttt{/api/spin} endpoint up to 6 times to fill three unique slots.\newline
+5. System deduplicates dishes across slots.\newline
+6. System returns a guaranteed triple of dishes.\newline
+7. Result is displayed to all party members. \\
+\hline
+\textbf{Extensions} & 2a: No categories provided $\rightarrow$ system defaults to \texttt{["dinner"]}.\newline
+3a: A slot is locked $\rightarrow$ the existing dish is retained; only unlocked slots are re-spun.\newline
+4a: Internal \texttt{/api/spin} call fails or times out $\rightarrow$ system falls back to a hardcoded menu of 6 dishes.\newline
+5a: After 6 attempts, a slot still has no unique dish $\rightarrow$ slot receives a "No options" placeholder. \\
+\hline
+\textbf{Postconditions} & Three unique, allergen-safe dishes are selected and displayed to all members \\
+\end{supertabular}
+}
+
+\subsection*{Lock a Reel and Re-Spin}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Lock a reel and re-spin \\
+\hline
+\textbf{Primary actor} & Solo user \\
+\hline
+\textbf{Stakeholders \& interests} & Solo user --- wants to keep one dish they like while exploring alternatives for the others \\
+\hline
+\textbf{Preconditions} & A spin has already produced a selection; at least one reel is unlocked \\
+\hline
+\textbf{Trigger} & User locks one or more reels and clicks Spin \\
+\hline
+\textbf{Main success scenario} & 1. User toggles the lock icon on one or more reel cards.\newline
+2. User clicks Spin.\newline
+3. System receives the spin request with locked entries \texttt{\{ index, dishId \}}.\newline
+4. System keeps the locked dish IDs in their slots unchanged.\newline
+5. System builds fresh candidate lists only for unlocked slots.\newline
+6. System deduplicates across the full selection including locked dishes.\newline
+7. Updated selection is returned and displayed. \\
+\hline
+\textbf{Extensions} & 3a: Lock payload contains only index numbers (legacy format) $\rightarrow$ system ignores them and treats slots as unlocked.\newline
+5a: No alternative dish exists for an unlocked slot's category $\rightarrow$ slot receives a placeholder.\newline
+6a: Deduplication produces fewer than three unique dishes $\rightarrow$ remaining slots show whatever is available. \\
+\hline
+\textbf{Postconditions} & Locked reels retain their previous dish; unlocked reels display new, deduplicated suggestions \\
+\end{supertabular}
+}
+
+\subsection*{Update Display Name}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Update display name \\
+\hline
+\textbf{Primary actor} & Authenticated user \\
+\hline
+\textbf{Stakeholders \& interests} & System --- must keep the Stack Auth display name in sync with the application database \\
+\hline
+\textbf{Preconditions} & User is signed in and on the Account page \\
+\hline
+\textbf{Trigger} & User changes their display name in Stack's AccountSettings widget \\
+\hline
+\textbf{Main success scenario} & 1. User edits their display name in the AccountSettings widget.\newline
+2. Account page polls Stack Auth every 2 seconds and detects the name change.\newline
+3. System calls \texttt{updateUserDetails} with \texttt{\{ name: newDisplayName \}}.\newline
+4. Server updates the \texttt{User.name} column.\newline
+5. \texttt{UserContext.refreshUser} is called; the header re-renders with the new name. \\
+\hline
+\textbf{Extensions} & 2a: Display name has not changed since last poll $\rightarrow$ no database call is made.\newline
+3a: Stack Auth returns no display name $\rightarrow$ sync is skipped for that poll cycle.\newline
+4a: Database update fails $\rightarrow$ error is logged; the displayed name reverts to the previously synced value on the next successful poll. \\
+\hline
+\textbf{Postconditions} & The new name is reflected in the application database and in the page header \\
+\end{supertabular}
+}
+
+\subsection*{View Recipe Videos for a Dish}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & View recipe videos for a dish \\
+\hline
+\textbf{Primary actor} & Solo user \\
+\hline
+\textbf{Stakeholders \& interests} & User --- wants step-by-step cooking guidance; YouTube API --- is the video source \\
+\hline
+\textbf{Preconditions} & A spin result is displayed \\
+\hline
+\textbf{Trigger} & User clicks "Cook at Home" \\
+\hline
+\textbf{Main success scenario} & 1. User clicks "Cook at Home."\newline
+2. Client opens the recipe video modal.\newline
+3. Client sends spun dish names to \texttt{/api/videos}.\newline
+4. System searches YouTube for "<dish> recipe" for each dish (up to 2 results each).\newline
+5. System normalizes results: video ID, title, description, URL, thumbnail.\newline
+6. Modal displays video cards grouped by dish. \\
+\hline
+\textbf{Extensions} & 4a: \texttt{YOUTUBE\_API\_KEY} is not set $\rightarrow$ system returns deterministic stub videos with a notice; modal still opens with stub content.\newline
+4b: YouTube API returns an HTTP error for a dish $\rightarrow$ that dish's video list is empty; per-dish error is recorded; other dishes succeed.\newline
+6a: No videos found for a dish $\rightarrow$ that dish's section shows no cards. \\
+\hline
+\textbf{Postconditions} & A modal opens showing recipe video links for each spun dish \\
+\end{supertabular}
+}
+
+\subsection*{Save a Meal to Favorites}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Save a meal to favorites \\
+\hline
+\textbf{Primary actor} & Player \\
+\hline
+\textbf{Stakeholders \& interests} & Authenticated user: wants the saved meal available later, across sessions. Guest: wants short-term, session-only convenience. \\
+\hline
+\textbf{Preconditions} & A spin has produced a displayed dish. \\
+\hline
+\textbf{Trigger} & Player clicks the heart/save icon on a dish. \\
+\hline
+\textbf{Main success scenario} & 1. Player clicks the heart icon on a displayed dish.\newline
+2. System marks the dish as saved.\newline
+3. If the player is authenticated, system persists the saved dish to their account.\newline
+4. If the player is a guest, system stores the saved dish in browser local storage only.\newline
+5. Player can later view the dish on the Favorites page. \\
+\hline
+\textbf{Extensions} & 3a: The persistence request fails $\rightarrow$ system shows an error and reverts the heart icon to unsaved.\newline
+4a: A guest later signs in $\rightarrow$ the guest's locally saved meals are not migrated to the new account and are effectively lost. \\
+\hline
+\textbf{Postconditions} & The dish appears in Favorites for the current session (guest) or account (authenticated user). \\
+\end{supertabular}
+}
+
+\subsection*{Filter Meals by Allergen}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Filter meals by allergen \\
+\hline
+\textbf{Primary actor} & Player \\
+\hline
+\textbf{Stakeholders \& interests} & Player with a food allergy: needs excluded dishes to never appear (safety-critical, not just preference). \\
+\hline
+\textbf{Preconditions} & Filter menu is available; allergen options are loaded. \\
+\hline
+\textbf{Trigger} & Player opens the filter menu and selects one or more allergens to avoid. \\
+\hline
+\textbf{Main success scenario} & 1. Player opens the Filter Menu.\newline
+2. System displays available allergen and tag options drawn from the dish catalog plus a default list.\newline
+3. Player selects allergens to avoid.\newline
+4. System excludes any dish containing a selected allergen from all future spins.\newline
+5. Player spins; results contain no dishes with the excluded allergens. \\
+\hline
+\textbf{Extensions} & 2a: The allergen list cannot be derived from the catalog $\rightarrow$ system falls back to a static default allergen list.\newline
+4a: The selected allergens eliminate every dish for a slot's category $\rightarrow$ system fills that slot with a placeholder "No options" dish.\newline
+5a: Player is signed in and already has allergens saved on their account $\rightarrow$ system pre-selects those in the filter menu on open. \\
+\hline
+\textbf{Postconditions} & Only allergen-safe dishes are eligible for subsequent spins this session. \\
+\end{supertabular}
+}
+
+\subsection*{Register an Account}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Register an account \\
+\hline
+\textbf{Primary actor} & New user \\
+\hline
+\textbf{Stakeholders \& interests} & System --- must create a linked \texttt{User} record in the database for future personalization \\
+\hline
+\textbf{Preconditions} & User does not have an existing account \\
+\hline
+\textbf{Trigger} & User completes the Stack Auth sign-up flow \\
+\hline
+\textbf{Main success scenario} & 1. User navigates to the sign-up page via Stack Auth.\newline
+2. User provides credentials and completes sign-up.\newline
+3. Stack Auth creates an identity and issues a session.\newline
+4. Application calls \texttt{ensureUserInDB} with the Stack Auth user ID and display name.\newline
+5. System upserts a \texttt{User} record: new UUID, \texttt{auth\_id}, display name, empty \texttt{allergens}, empty \texttt{savedMeals}.\newline
+6. User is redirected to the home page with a personalized session. \\
+\hline
+\textbf{Extensions} & 4a: \texttt{auth\_id} is missing or null $\rightarrow$ \texttt{ensureUserInDB} returns null; no DB record is created; an error is logged.\newline
+5a: A \texttt{User} with that \texttt{auth\_id} already exists (returning user) $\rightarrow$ upsert skips creation and returns the existing record.\newline
+5b: Database write fails $\rightarrow$ error is thrown; user sees an error state; sign-in cannot complete. \\
+\hline
+\textbf{Postconditions} & An authenticated session is established; a \texttt{User} row is created in the application database linked to the auth ID \\
+\end{supertabular}
+}
+
+\subsection*{Apply Power-Ups to Bias Selection}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Apply power-ups to bias selection \\
+\hline
+\textbf{Primary actor} & Player \\
+\hline
+\textbf{Stakeholders \& interests} & Player: wants results skewed toward healthier, cheaper, or faster options without losing randomness entirely. \\
+\hline
+\textbf{Preconditions} & Spin screen is loaded. \\
+\hline
+\textbf{Trigger} & Player toggles one or more Power-Ups (Healthy, Cheap, $\leq$30 min). \\
+\hline
+\textbf{Main success scenario} & 1. Player toggles a Power-Up on.\newline
+2. System records the active Power-Up.\newline
+3. Player clicks Spin.\newline
+4. System weights eligible dishes to favor those matching the active Power-Up.\newline
+5. System selects dishes from the weighted candidates.\newline
+6. System displays the results. \\
+\hline
+\textbf{Extensions} & 1a: Player toggles a Power-Up off $\rightarrow$ system removes that influence from later spins.\newline
+2a: Player activates several Power-Ups $\rightarrow$ system combines their scoring effects.\newline
+4a: No eligible dish matches an active Power-Up $\rightarrow$ system still selects from the available eligible dishes rather than failing the spin. \\
+\hline
+\textbf{Postconditions} & Active Power-Ups influence subsequent spins until the player changes them. \\
+\end{supertabular}
+}
+
+\subsection*{Browse Saved Meals}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Browse saved meals \\
+\hline
+\textbf{Primary actor} & Authenticated User \\
+\hline
+\textbf{Stakeholders \& interests} & User: wants to revisit saved meal ideas and narrow them by category. MealSlot: must resolve saved identifiers against the current dish catalog. \\
+\hline
+\textbf{Preconditions} & User is signed in and has a MealSlot profile. \\
+\hline
+\textbf{Trigger} & User opens the Favorites page. \\
+\hline
+\textbf{Main success scenario} & 1. System loads the user's saved-meal identifiers.\newline
+2. System resolves the identifiers against the current dish catalog.\newline
+3. System displays the saved dishes.\newline
+4. User selects a meal category.\newline
+5. System displays only saved dishes in that category. \\
+\hline
+\textbf{Extensions} & 1a: User is not signed in $\rightarrow$ system explains that sign-in is required and offers authentication.\newline
+2a: A saved identifier no longer exists in the catalog $\rightarrow$ system omits that entry while displaying the remaining dishes.\newline
+2b: Dish catalog loading fails $\rightarrow$ system reports that saved dish details cannot be loaded.\newline
+3a: User has no saved meals $\rightarrow$ system displays an empty-state message.\newline
+5a: No saved dish matches the selected category $\rightarrow$ system displays an empty filtered result without altering the saved collection. \\
+\hline
+\textbf{Postconditions} & User has viewed the current saved-meal collection or a category-filtered subset. \\
+\end{supertabular}
+}
+
+\subsection*{Remove a Saved Meal}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Remove a saved meal \\
+\hline
+\textbf{Primary actor} & Authenticated User \\
+\hline
+\textbf{Stakeholders \& interests} & User: wants to remove unwanted ideas from Favorites. MealSlot: must keep the displayed and persisted saved collections consistent. \\
+\hline
+\textbf{Preconditions} & User is signed in and the target dish appears on the Favorites page. \\
+\hline
+\textbf{Trigger} & User chooses to remove a saved dish. \\
+\hline
+\textbf{Main success scenario} & 1. User requests removal of a saved dish.\newline
+2. System removes the dish from the displayed collection.\newline
+3. System stores the shortened saved-meal collection in the user's profile.\newline
+4. System refreshes the profile.\newline
+5. System displays the resulting saved-meal collection. \\
+\hline
+\textbf{Extensions} & 2a: User removes the final saved dish $\rightarrow$ system displays the Favorites empty state.\newline
+3a: Persistence fails $\rightarrow$ system reports or logs the failure and restores the server's prior collection during refresh.\newline
+4a: Profile refresh fails $\rightarrow$ the optimistic removal remains visible until a later successful refresh.\newline
+5a: Server state differs because of a concurrent update $\rightarrow$ system displays the server's authoritative collection. \\
+\hline
+\textbf{Postconditions} & On success, the dish is absent from the user's displayed and persistent saved-meal collection. \\
+\end{supertabular}
+}
+
+\subsection*{Leave a Party}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Leave a party \\
+\hline
+\textbf{Primary actor} & Party Member (host or non-host) \\
+\hline
+\textbf{Stakeholders \& interests} & Remaining members --- need the party to keep functioning, including gaining a new host if needed. \\
+\hline
+\textbf{Preconditions} & Player is currently in a party. \\
+\hline
+\textbf{Trigger} & Player clicks "Leave Party". \\
+\hline
+\textbf{Main success scenario} & 1. Player clicks "Leave Party".\newline
+2. System removes the player's membership record.\newline
+3. System broadcasts the departure to remaining members.\newline
+4. Player's local party state is cleared and they return to the Party landing screen. \\
+\hline
+\textbf{Extensions} & 2a: The leaving player was the host $\rightarrow$ no explicit reassignment occurs; the next live member is treated as host once presence updates.\newline
+2b: Membership removal fails on the server $\rightarrow$ system shows an error; player may retry leaving. \\
+\hline
+\textbf{Postconditions} & Player no longer appears in the party's member list; if they were host, host duties implicitly pass to another connected member. \\
+\end{supertabular}
+}
+
+\subsection*{Find Nearby Restaurants After Spinning}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Find nearby restaurants after spinning \\
+\hline
+\textbf{Primary actor} & Solo user \\
+\hline
+\textbf{Stakeholders \& interests} & User --- wants to eat out; Google Places API --- is the data source; System --- must resolve location \\
+\hline
+\textbf{Preconditions} & A spin result with at least one dish is displayed \\
+\hline
+\textbf{Trigger} & User clicks "Eat Outside" \\
+\hline
+\textbf{Main success scenario} & 1. User clicks "Eat Outside."\newline
+2. Browser requests the user's geolocation.\newline
+3. Client sends cuisine names derived from the spin result along with GPS coordinates to \texttt{/api/places}.\newline
+4. System queries Google Places text search for each cuisine near the provided coordinates.\newline
+5. System normalizes results: name, address, rating, price tier, distance (km), Google Maps URL.\newline
+6. Client displays venue cards and renders pins on the embedded map. \\
+\hline
+\textbf{Extensions} & 2a: User denies geolocation $\rightarrow$ client calls \texttt{/api/places} without coordinates.\newline
+2b: Browser does not support geolocation $\rightarrow$ same as 2a.\newline
+3a: No coordinates provided $\rightarrow$ system geocodes the \texttt{locationHint} ("Denver") to obtain an origin.\newline
+3b: Geocoding fails $\rightarrow$ distances are omitted; venues are still returned with a notice.\newline
+4a: Google Places returns an error for a cuisine $\rightarrow$ that cuisine's result is empty; other cuisines succeed; per-cuisine errors are collected and returned. \\
+\hline
+\textbf{Postconditions} & A list of nearby restaurants matching the spun cuisines is displayed with ratings, prices, distances, and map \\
+\end{supertabular}
+}
+
+\subsection*{Create Party}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Create party \\
+\hline
+\textbf{Primary actor} & Party host \\
+\hline
+\textbf{Stakeholders \& interests} & Host: establish a shared meal-decision session. Invitees: receive a valid room to join. MealSlot: create a unique active party and identify its host. \\
+\hline
+\textbf{Preconditions} & Host is in party mode and has supplied a nickname. \\
+\hline
+\textbf{Trigger} & Host requests a new party. \\
+\hline
+\textbf{Main success scenario} & 1. System validates the host nickname.\newline
+2. System creates an active party with a six-character code.\newline
+3. System adds the creator as the first party member and host.\newline
+4. System initializes the host's party preferences.\newline
+5. System displays the active party code and collaborative experience.\newline
+6. System establishes live presence for the host. \\
+\hline
+\textbf{Extensions} & 1a: Nickname is empty or invalid $\rightarrow$ system prevents party creation.\newline
+2a: Generated code collides with an existing party $\rightarrow$ system retries or reports creation failure.\newline
+2b: Party storage fails $\rightarrow$ system reports that the party could not be created.\newline
+4a: Host has saved account allergens $\rightarrow$ system initializes party allergens from that profile.\newline
+6a: Cross-device realtime is not configured $\rightarrow$ system uses same-origin browser communication only. \\
+\hline
+\textbf{Postconditions} & An active party exists with a unique code, and the creator is its host member. \\
+\end{supertabular}
+}
+
+\subsection*{Join Party}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Join Party \\
+\hline
+\textbf{Primary actor} & User \\
+\hline
+\textbf{Stakeholders \& interests} & User: Join an existing party using a 6-character code and be associated with the party. Host: Manage party members, preferences, and interactions. System: Maintain accurate party member records and preferences. Party Member: Update diet preferences and allergens, and be recognized in the member list. \\
+\hline
+\textbf{Preconditions} & User has a valid auth\_id. \\
+\hline
+\textbf{Trigger} & User provides a 6-character party code and optionally a nickname. \\
+\hline
+\textbf{Main success scenario} & 1. User provides a 6-character party code.\newline
+2. System verifies the party code exists.\newline
+3. System associates the user with the party using their auth\_id.\newline
+4. System creates a party member record with the user's preferences.\newline
+5. System returns the party ID, member ID, and party code.\newline
+6. System displays the user's nickname and 'you' indicator in the member list. \\
+\hline
+\textbf{Extensions} & 2a: Party code is invalid or does not exist $\rightarrow$ system returns an error indicating the party code is invalid.\newline
+4a: User already belongs to a party $\rightarrow$ system returns an error indicating the user is already part of a party.\newline
+5a: User provides a nickname $\rightarrow$ system stores the nickname for the user in the party member record.\newline
+6a: User has not provided any preferences $\rightarrow$ system stores default preferences for the user in the party member record. \\
+\hline
+\textbf{Postconditions} & User is associated with the party and has a party member record; user's nickname and preferences are stored in the party member record; user is displayed in the member list with 'you' indicator. \\
+\end{supertabular}
+}
+
+\subsection*{Sign In to an Account}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Sign in to an account \\
+\hline
+\textbf{Primary actor} & Returning User \\
+\hline
+\textbf{Stakeholders \& interests} & User: wants saved meals and allergen preferences restored. Authentication provider: must validate identity securely. MealSlot: must load only the matching user's profile. \\
+\hline
+\textbf{Preconditions} & User has an existing account and is currently signed out. \\
+\hline
+\textbf{Trigger} & User clicks Sign In. \\
+\hline
+\textbf{Main success scenario} & 1. System presents the available sign-in methods.\newline
+2. User authenticates with a registered identity.\newline
+3. Authentication provider validates the identity and establishes a session.\newline
+4. MealSlot locates the linked application profile.\newline
+5. System loads the user's saved meals and allergen preferences.\newline
+6. System returns the user to the application in the signed-in state. \\
+\hline
+\textbf{Extensions} & 2a: User requests password recovery $\rightarrow$ authentication provider begins its recovery flow.\newline
+3a: Credentials are invalid $\rightarrow$ system displays an authentication error and creates no session.\newline
+3b: A third-party sign-in provider fails $\rightarrow$ system reports the failure and permits another supported method.\newline
+4a: No application profile exists for the valid identity $\rightarrow$ MealSlot creates one with empty saved data before continuing.\newline
+5a: Profile loading fails $\rightarrow$ system reports the error and does not expose stale or another user's account data. \\
+\hline
+\textbf{Postconditions} & User has an authenticated session with their own saved meals and preferences loaded. \\
+\end{supertabular}
+}
+
+\subsection*{Sign Out of an Account}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Sign out of an account \\
+\hline
+\textbf{Primary actor} & Authenticated User \\
+\hline
+\textbf{Stakeholders \& interests} & User: wants to end access on the current device. MealSlot: must prevent a later user from seeing cached personal data. \\
+\hline
+\textbf{Preconditions} & User is signed in. \\
+\hline
+\textbf{Trigger} & User clicks Sign Out. \\
+\hline
+\textbf{Main success scenario} & 1. User requests sign-out.\newline
+2. Authentication provider ends the current session.\newline
+3. System clears the in-app user profile state.\newline
+4. System clears account-specific client caches.\newline
+5. System returns the visitor to the signed-out home experience. \\
+\hline
+\textbf{Extensions} & 2a: Provider sign-out fails $\rightarrow$ system reports the failure and does not falsely claim that the session ended.\newline
+3a: Client storage is unavailable $\rightarrow$ system clears removable in-memory state and relies on the ended provider session for protection.\newline
+5a: Visitor directly opens an account-only page after sign-out $\rightarrow$ system requires authentication and exposes no previous user's data. \\
+\hline
+\textbf{Postconditions} & No authenticated session remains in the current browser context and prior account data is not exposed. \\
+\end{supertabular}
+}
+
+\subsection*{Chat with Party Members}
+{\footnotesize
+\begin{supertabular}{@{}p{0.26\linewidth}p{0.68\linewidth}@{}}
+\textbf{Name} & Chat with party members \\
+\hline
+\textbf{Primary actor} & Party Member \\
+\hline
+\textbf{Stakeholders \& interests} & Other members --- want to coordinate the group's decision in real time. \\
+\hline
+\textbf{Preconditions} & Player is a connected party member. \\
+\hline
+\textbf{Trigger} & Member types a message and clicks "Send" in the party chat. \\
+\hline
+\textbf{Main success scenario} & 1. Member types a message in the chat panel.\newline
+2. Member sends the message.\newline
+3. System broadcasts the message to all connected party members.\newline
+4. All members see the message appear in their chat panel with the sender's nickname. \\
+\hline
+\textbf{Extensions} & 2a: The message is empty $\rightarrow$ the send action does nothing.\newline
+3a: No dedicated realtime server is configured for the party $\rightarrow$ the message only reaches other browser tabs on the same machine, not members on other devices. \\
+\hline
+\textbf{Postconditions} & The message is visible in the chat history of all currently connected members for the remainder of the session; it is not persisted. \\
+\end{supertabular}
+}
+
+\section{Tests}
+
+\section{Traceability Table}
+
+\section{Prompt Notes}
+
+\end{document}

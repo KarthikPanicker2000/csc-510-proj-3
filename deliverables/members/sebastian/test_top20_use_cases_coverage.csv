@@ -1,0 +1,110 @@
+Use Case,Test Case IDs,Test Results,Notes,Tester
+UC1 - Spin for a Meal,"Test 01
+Test 02
+Test 03",Pass,"Test 01: proves a spin with one candidate per slot deterministically returns that exact dish for every slot, covering the main success scenario.
+Test 02: proves an empty reel yields a 'No options' placeholder instead of failing the whole spin, covering Extension 4b.
+Test 03: proves the cooldown gate rejects a spin fired inside the 3-second window and allows one after it elapses, covering Extension 7a.",Sebastian
+UC2 - Set Party Dietary Preferences and Resolve Conflicts,"Test 04
+Test 05
+Test 06",Pass,"Test 04: proves merging two members' preferences picks the strictest diet, unions their allergens, and takes the minimum budget/time band, covering the main success scenario.
+Test 05: proves mergeConstraints() always resolves diet-only combinations to one strictest diet, documenting that Extension 4a's 'mutually incompatible diets' conflict path is unreachable dead code.
+Test 06: proves a merged vegan diet plus three or more commonly-blocked allergens correctly triggers Extension 4b's conflict flag and suggestion.",Sebastian
+UC3 - Vote on a Spin Result,"Test 07
+Test 08
+Test 09",Pass,"Test 07: proves 2 keep-votes out of 3 live members reaches quorum and locks the slot, covering the main success scenario's majority rule.
+Test 08: proves Extension 2a, a member switching their vote replaces the prior choice instead of being counted under both keep and reroll.
+Test 09: proves Extension 4a, the same single keep-vote fails quorum among 3 live members but succeeds once the live count drops to 1, since quorum recomputes from currently connected members.",Sebastian
+UC4 - Spin the Party Slot Machine,"Test 10
+Test 11
+Test 12
+Test 13",Failure,"Test 10: proves a party spin preserves a locked slot's dish and fills the remaining slots with distinct dishes, covering the main success scenario.
+Test 11: proves Extension 4a, when the internal spin call fails on every attempt, all three slots are filled from the hardcoded fallback menu instead of the request failing.
+Test 12: proves Extension 5a, slots that can never get a unique pick end up with 'No options' placeholders after the 6-try limit instead of looping forever.
+Test 13 (new, failing): checks the retry loop against the use case's own stated budget of 'up to 6 calls total' to fill three slots; it FAILED because the ported party_spin() calls the spin endpoint once per unfilled slot on every retry, making 13 calls instead of 6, exposing a real bug in the retry-count logic.",Sebastian
+UC5 - Lock a Reel and Re-Spin,"Test 14
+Test 15
+Test 16",Pass,"Test 14: proves a lock keyed by index and dish ID is honored on respin while unlocked slots are still populated normally, covering the main success scenario.
+Test 15: proves Extension 3a, a legacy lock payload with no usable index/dishId pair is treated as no lock at all rather than crashing or falsely locking.
+Test 16: proves Extension 6a, when every reel only offers one shared dish, the spin still returns a full three-slot result instead of raising an error.",Sebastian
+UC6 - Update Display Name,"Test 17
+Test 18
+Test 19",Pass,"Test 17: proves detecting a display-name change on a poll cycle triggers exactly one database update with the new name, covering the main success scenario.
+Test 18: proves Extension 2a, an unchanged name on the next poll triggers no redundant database write.
+Test 19: proves Extension 4a, a failed database update does not corrupt the locally tracked synced name, so the next poll can retry cleanly.",Sebastian
+UC7 - View Recipe Videos for a Dish,"Test 20
+Test 21
+Test 22",Pass,"Test 20: proves the main success scenario caps recipe videos at two results per dish.
+Test 21: proves Extension 4a, with no API key configured the system returns stub content rather than calling the search function or leaving the modal empty.
+Test 22: proves Extension 4b, a per-dish video lookup failure empties only that dish's video list while other dishes' lookups still succeed.",Sebastian
+UC8 - Save a Meal to Favorites,"Test 23
+Test 24
+Test 25",Pass,"Test 23: proves saving a dish while authenticated updates the local list and persists it to the account in one step, covering the main success scenario.
+Test 24: proves Extension 3a, when persistence fails the returned state matches the prior unsaved list so the UI can revert the heart icon.
+Test 25: proves Extension 4a, a guest's saved meal exists only in local state and signing in afterward starts the account from an empty saved-meals list rather than importing it.",Sebastian
+UC9 - Filter Meals by Allergen,"Test 26
+Test 27
+Test 28",Pass,"Test 26: proves any dish containing a selected allergen is excluded while unaffected dishes remain eligible, covering the main success scenario.
+Test 27: proves Extension 4a, when an allergen filter eliminates every candidate for a slot, the downstream spin still returns a 'No options' placeholder instead of erroring.
+Test 28: proves Extension 5a, opening the filter menu for a signed-in user with saved allergens starts the selection pre-populated from their account rather than empty.",Sebastian
+UC10 - Register an Account,"Test 29
+Test 30
+Test 31",Pass,"Test 29: proves a first-time auth_id causes a new User record to be upserted with empty allergens and saved meals, covering the main success scenario.
+Test 30: proves Extension 5a, a returning user's auth_id resolves to the existing record instead of creating a duplicate.
+Test 31: proves Extension 4a, a null or missing auth_id short-circuits to no record being created.",Sebastian
+UC11 - Apply Power-Ups to Bias Selection,"Test 32
+Test 33
+Test 34",Pass,"Test 32: proves activating the Healthy power-up weights an eligible healthy dish above a comparable unhealthy one, covering the main success scenario.
+Test 33: proves Extension 2a, multiple active power-ups combine multiplicatively rather than one overriding the other.
+Test 34: proves Extension 4a, when no eligible dish satisfies the active power-up, the spin still returns the best available dish rather than returning nothing.",Sebastian
+UC12 - Browse Saved Meals,"Test 35
+Test 36
+Test 37",Pass,"Test 35: proves saved identifiers resolve to full dish records and can be narrowed to a single category, covering the main success scenario.
+Test 36: proves Extension 2a, a saved dish that has since been removed from the catalog is dropped from the displayed list rather than causing an error.
+Test 37: proves Extension 3a, an empty saved-meal collection resolves cleanly to an empty list for the UI's empty state.",Sebastian
+UC13 - Remove a Saved Meal,"Test 38
+Test 39
+Test 40",Pass,"Test 38: proves removing one saved dish leaves the rest intact and persists the updated collection, covering the main success scenario.
+Test 39: proves Extension 3a, a persistence failure returns the prior collection unchanged so a refresh can restore the server's authoritative state instead of losing the item silently.
+Test 40: proves removing a user's final saved meal correctly results in the empty-state collection rather than a special-cased error.",Sebastian
+UC14 - Leave a Party,"Test 41
+Test 42
+Test 43",Pass,"Test 41: proves leaving removes exactly the departing member's record and leaves other members untouched, covering the main success scenario.
+Test 42: proves Extension 2a, there is no explicit reassign-host step; once the host's record is gone, host computation falls through to the next live member.
+Test 43: proves Extension 2b's guarantee in the opposite direction, a removal that cannot be matched to a real member leaves the roster exactly as it was.",Sebastian
+UC15 - Find Nearby Restaurants After Spinning,"Test 44
+Test 45
+Test 46",Pass,"Test 44: proves each requested cuisine is searched near the caller's real coordinates with no per-cuisine errors, covering the main success scenario.
+Test 45: proves Extensions 2a/3a, when the browser provides no coordinates the system geocodes the configured location hint instead of failing.
+Test 46: proves Extension 4a, a Places error for one cuisine is isolated to that cuisine's result and error entry while the other cuisine still succeeds.",Sebastian
+UC16 - Create Party,"Test 47
+Test 48
+Test 49",Pass,"Test 47: proves supplying a valid nickname produces an active party with a generated code and the creator registered as host, covering the main success scenario.
+Test 48: proves Extension 1a, a blank or whitespace-only nickname is rejected before a party is ever created.
+Test 49: proves Extension 4a, a signed-in host's previously saved allergens automatically seed their party-member preferences instead of starting empty.",Sebastian
+UC17 - Join Party,"Test 50
+Test 51
+Test 52
+Test 53",Failure,"Test 50: proves a valid code and nickname adds the joiner as a new party member and returns their membership details, covering the main success scenario.
+Test 51: proves Extension 2a, an invalid or inactive party code is rejected and no membership record is created.
+Test 52: proves Extension 6a, a joiner who supplies no preferences is still given a member record, defaulted to empty preferences rather than being blocked.
+Test 53 (new, failing): checks the use case's own stated rule that a user already in a party is blocked from joining another; it FAILED because join_party() has no auth_id parameter at all, so it happily adds the same user to a second party with no error, showing that rule was never implemented in the port.",Sebastian
+UC18 - Sign In to an Account,"Test 54
+Test 55
+Test 56",Pass,"Test 54: proves valid credentials produce a session and load that same identity's saved profile, covering the main success scenario.
+Test 55: proves Extension 3a, credentials that do not match any known identity are rejected and no session or profile access occurs.
+Test 56: proves Extension 4a, a valid identity with no prior profile has one created on the fly with empty saved data rather than sign-in failing.",Sebastian
+UC19 - Sign Out of an Account,"Test 57
+Test 58
+Test 59",Pass,"Test 57: proves sign-out clears the authenticated session, the in-app profile, and any cached account data in one step, covering the main success scenario.
+Test 58: proves Extension 2a, when the identity provider's sign-out step fails, the local session is left intact and the caller is told it did not succeed.
+Test 59: proves Extension 5a, visiting an account-only view after sign-out returns no data at all rather than leaking the previous user's cached profile.",Sebastian
+UC20 - Chat with Party Members,"Test 60
+Test 61
+Test 62",Pass,"Test 60: proves sending a message delivers it to every connected member's chat panel, covering the main success scenario.
+Test 61: proves Extension 2a, an empty or whitespace-only message is a no-op rather than producing a blank chat entry.
+Test 62: proves Extension 3a, without a dedicated realtime server configured, the chat message reaches only same-machine peers and never other devices.",Sebastian
+UC21 - Manage Dietary Preferences (Sebastian UC12),"Test 63
+Test 64
+Test 65",Pass,"Test 63: proves an updated allergen list is written to the user's account record, covering the main success scenario.
+Test 64: proves Extension 5a, when the save request fails the account keeps its previously active allergen list instead of ending up partially updated.
+Test 65: proves the use case's core value, once allergens are saved to the account they are applied to spin candidates automatically without the user re-entering them as a session filter.",Sebastian
