@@ -4,7 +4,10 @@ Source reports: [Gemini_Prompt_Notes.md](Gemini_Prompt_Notes.md) (Gemini 3.6 Fla
 Medium), [Prompt_Notes_Sonnet_5.md](Prompt_Notes_Sonnet_5.md) (Claude Sonnet 5),
 [prompt_notes_gpt56sol.md](prompt_notes_gpt56sol.md) (GPT-5.6 Sol) — all three run
 against the same [prompts.md](prompts.md) (15 prompts) on the MealSlot codebase
-(`proj2/mealslot`).
+(`proj2/mealslot`). A fourth run, **qwen3:8b served locally via Ollama**, is covered
+separately in §4 — it has no source file (output was pasted directly into the working
+session) and isn't run through the same pipeline as the other three, so it's kept out
+of the main table and scorecard rather than force-fit into a fourth column.
 
 **Method for this comparison:** every disagreement below was checked against the live
 repository (grep, direct file reads, or a fresh `pnpm test`/`pnpm build` run) rather
@@ -180,3 +183,53 @@ executed pair every time. Where Sonnet and GPT-5.6 Sol disagree with each other
 (§2.4, §2.6, §2.7), it wasn't 2-vs-1 — it was two static-analysis claims that needed a
 tiebreaking read of the actual source, and GPT-5.6 Sol's static analysis was more
 carefully sourced in every case checked.
+
+---
+
+## 4. A fourth data point: qwen3:8b (local, non-comparable)
+
+**Configuration:** qwen3:8b served locally through Ollama, thinking disabled, 24,576
+token context window, temperature 0.25. Source files were supplied with line numbers
+prepended for citation-checking. No tool use, no `git`/`pnpm` execution, no separate
+report file — one-shot text generation against pre-supplied source, pasted directly
+into this session.
+
+**Why it isn't in the table above:** the other three reports came from full agentic
+sessions — reading files, running `git log`, executing `pnpm test`/`pnpm build`,
+grepping the live tree — over an entire repo. qwen3:8b's run was a single-pass text
+completion over whatever source text was pasted into its context window, scored by a
+separate automated pipeline that itself reports "Evaluation pass failed to parse" for
+most prompts. That's a different task shape, not a weaker attempt at the same one, so
+scoring it against Gemini/Sonnet/GPT-5.6 Sol on the same axis would misrepresent both.
+
+**What actually happened:** 9 of 15 prompts were attempted (2, 3, 6, 7, 9, 10 not run
+— consistent with the ones needing either a pasted module/use-case format the harness
+didn't supply, or real execution, which this configuration never attempted). Of those
+9, 6 came back "Abandoned — evaluation pass failed to parse." Only Prompt 5 (fragile
+areas) and Prompt 15 (onboarding) produced usable output; Prompt 13 was partially
+salvaged from malformed output. Prompt 2's "Caught Issues" section and the
+Strengths/Weaknesses section were both empty.
+
+**Verification of the one falsifiable claim it made:** Prompt 5's output cited three
+files as large — `llm.ts:287`, `route.ts:214`, `PartySpinMachine.tsx:385` — and its own
+self-reported citation audit claimed 3 of 3 resolved. Checked directly this session:
+
+| Citation | Actual line count |
+|---|---|
+| `lib/llm.ts:287` | 287 lines total — **matches exactly** |
+| `route.ts:214` | `app/api/party/spin/route.ts` is 214 lines — the largest `route.ts` in the repo, **matches exactly** |
+| `PartySpinMachine.tsx:385` | `components/party/PartySpinMachine.tsx` is 385 lines total — **matches exactly** |
+
+All three check out — qwen3:8b's citation-audit claim was accurate, not hallucinated.
+The catch: each citation is just the file's final line number, i.e., "this file is
+long." There's no churn, TODO density, function-size, or age evidence behind it the
+way Prompt 5 asks for — accurate, but shallow enough that it barely clears the bar of
+"a finding."
+
+**Read on this run:** not evidence that 8B-class local models can't do this task —
+evidence that *this specific configuration* mostly couldn't. `thinking disabled` is the
+biggest suspect: Qwen3 is a hybrid reasoner built to use a chain-of-thought pass on
+exactly this kind of multi-step structured task (read code → cite a line → classify →
+write a row), and running it thinking-off is closer to asking a reasoning model to
+skip its main mechanism. Before concluding 8B is a hard floor for this task locally,
+the cheapest next experiment is the same model, same hardware, thinking enabled.
